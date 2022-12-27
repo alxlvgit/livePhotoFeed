@@ -1,0 +1,82 @@
+const formidable = require("formidable");
+const slugify = require("slugify");
+const path = require("path");
+const database = require("../database/data.json");
+const fs = require("fs").promises;
+const { createReadStream } = require("fs");
+
+
+// Add photo to database, send response redirect with message 
+const addToDatabase = async (allPhotos, newPhoto, response) => {
+    if (allPhotos.includes(newPhoto)) {
+        response.setHeader("location", "/?message=IMAGE EXISTS");
+        response.statusCode = 302;
+        response.end();
+    } else {
+        allPhotos.push(newPhoto);
+        await fs.writeFile(path.join(__dirname, "..", "database", "data.json"), JSON.stringify(database));
+        response.setHeader("location", `/?message=NEW PHOTO UPLOADED`);
+        response.statusCode = 302;
+        response.end();
+        console.log("Database updated");
+    };
+}
+
+// Parse form, check if new image was added to form, add image to database
+const parseForm = (form, request, response) => {
+    form.parse(request, async (err, fields, files) => {
+        if (err) {
+            response.writeHead(err.httpCode || 400, { 'Content-Type': 'text/plain' });
+            response.end(String(err));
+            return;
+        }
+        if (files.multipleFiles != null) {
+            const userFromSearchParam = fields.user;
+            const userData = database.filter((user) => user.username === userFromSearchParam)[0];
+            const photos = userData.photos;
+            const newPhoto = files.multipleFiles.newFilename;
+            addToDatabase(photos, newPhoto, response);
+        } else {
+            response.setHeader("location", "/?message=WRONG FILE TYPE");
+            response.statusCode = 302;
+            response.end();
+        }
+    });
+}
+
+
+
+const helpers = {
+    // Create form, parse form. If filetype was image then add image to database. Send response 
+    "formidableImageUpload": (user, request, response) => {
+        const form = formidable({
+            multiples: false,
+            keepExtensions: true,
+            uploadDir: path.join(__dirname, `photos`, user),
+            filter: function ({ name, originalFilename, mimetype }) {
+                // keep only images
+                if (mimetype.includes("image")) {
+                    return mimetype;
+                } else return null;
+            },
+            filename(name, ext, part, form) {
+                // name is basename of the http originalFilename |  ext with the dot (.png, .jpeg, ..) .Only if keepExtensions is true
+                return `${slugify(name, '_')}${slugify(ext)}`;
+            },
+        });
+        parseForm(form, request, response);
+    },
+    // Image handler
+    "handleImages": (key, pathname, query, allRoutes) => {
+        if (query.fileType == "photo") {
+            allRoutes[key] = (req, res) => {
+                createReadStream(path.join(__dirname, pathname)).pipe(res);
+            };
+        } else { return }
+    }
+}
+
+
+
+
+module.exports = helpers;

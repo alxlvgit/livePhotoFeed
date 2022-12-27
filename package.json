@@ -1,0 +1,23 @@
+{
+  "name": "web-api",
+  "version": "0.0.1",
+  "description": "Milestone 2",
+  "nodemonConfig": {
+    "ignore": [
+      "*.json"
+    ]
+  },
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon src/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "ejs": "^3.1.8",
+    "formidable": "^2.0.1",
+    "slugify": "^1.6.5",
+    "socket.io": "^4.5.3"
+  }
+}

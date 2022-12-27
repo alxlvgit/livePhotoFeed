@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="/socket.io/socket.io.js"></script>
+  <style>
+    body {
+      background-color: #f1f1f1;
+      margin: 0;
+    }
+
+    nav {
+      display: flex;
+      align-items: center;
+      top: 0px;
+      width: 100%;
+      height: 80px;
+      background-color: white;
+    }
+
+    nav img {
+      border-radius: 0;
+      float: left;
+      height: 60px;
+      width: 60px;
+      margin: 0;
+      padding: 10px;
+    }
+
+    img {
+      width: 120px;
+      height: 120px;
+      margin-right: 20px;
+      /* margin: 20px; */
+      border-radius: 50%;
+    }
+
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-evenly;
+      flex-direction: column;
+      width: 50%;
+      align-items: center;
+    }
+
+    h1 {
+      margin: 30px 0 10px 20px;
+    }
+
+    .container-main {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .user-container {
+      width: 250px;
+      margin: 20px;
+      background-color: white;
+      padding: 30px;
+      border-radius: 5px;
+      display: flex;
+      height: 180px;
+      justify-content: space-evenly;
+    }
+
+    input {
+      display: none;
+    }
+
+    form {
+      display: flex;
+      flex-wrap: wrap;
+      width: 100%;
+      height: 80px;
+      align-items: flex-end;
+      justify-content: space-evenly;
+    }
+
+    a,
+    label,
+    button {
+      border-style: outset;
+      border-color: buttonborder;
+      width: 100px;
+      text-align: center;
+      height: fit-content;
+      display: block;
+      overflow-wrap: break-word;
+      padding: 7px;
+      border-radius: 10px;
+      background-color: black;
+      color: white;
+      text-decoration: none;
+    }
+  </style>
+  <title>Home page</title>
+</head>
+
+<body>
+  <nav id="navbar">
+    <img src="photos/logo.png?fileType=photo" alt="logo" />
+  </nav>
+  <div class="container-main">
+    <h1>Users</h1>
+    <% database.forEach((user)=> { %>
+      <div class="user-container">
+        <div class="picture-profile">
+          <img src="photos/<%= user.username %>/profile.jpeg?fileType=photo" alt="profile photo" />
+        </div>
+        <div class="links">
+          <form action="/form?userName=<%= user.username %>" method="post" enctype="multipart/form-data">
+            <label for="<%= user.username%>input">
+              Select image
+              <input type="file" name="multipleFiles" multiple="multiple" id="<%= user.username%>input" required />
+            </label>
+            <button type="submit" value="<%= user.username%>" name="user">
+              Upload
+            </button>
+          </form>
+          <a href="http://localhost:3000/feed?username=<%= user.username %>">
+            <%= user.username %>
+          </a>
+        </div>
+      </div>
+      <% }) %>
+  </div>
+  <script>
+    const socket = io();
+    const message = "<%-msg%>";
+    // Emit request to add new image to the feed 
+    if (message == "NEW PHOTO UPLOADED") {
+      socket.emit("upload new image to feed", "");
+      socket.once("alert", () => {
+        alert("Your new photo added to feed");
+      });
+    }
+  </script>
+</body>
+
+</html>
